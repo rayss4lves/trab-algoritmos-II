@@ -3,14 +3,13 @@
 #include <string.h>
 #include <time.h>
 
-struct Dia
-{
-    int status; // Aqui você pode ter diferentes valores para representar os estados (livre, ocupado, reservado, etc.)
-} Dia;
+
+// Aqui você pode ter diferentes valores para representar os estados (livre, ocupado, reservado, etc.)
+
 
 typedef struct Quartos
 {
-    struct Dia status[12][31]; // Array para cada dia do mês
+    int status[12][31]; // Array para cada dia do mês
     int numero_quarto;
     int tipo;
     float valor;
@@ -33,10 +32,7 @@ typedef struct Cliente
 
 typedef struct Reserva
 {
-
-    char nome[50];
-    char cpf[15];
-    char telefone[15];
+    struct Cliente cliente;
     int nmr_quarto;
     int ano; // salvar automaticamente o ano com a time
     int mes;
@@ -50,26 +46,26 @@ typedef struct Reserva
 
 typedef struct Checkin
 {
-
     int hora;
     int min;
     int dia;
     int mes;
     int ano;
-
 } Checkin;
 
 int menu_principal()
 { // menu 0
     int op;
-    printf("1 - Informacoes dos quartos\n2 - Informacoes do cliente\n0 - Sair\n");
+    printf("\n1 - Informacoes dos quartos\n2 - Informacoes do cliente\n0 - Sair\n");
     setbuf(stdin, NULL);
     scanf("%d", &op);
     return op;
 }
 
-Quartos cadastrar_quartos(Quartos quarto)
+Quartos cadastrar_quartos()
 {
+    Quartos quarto;
+
     int stts;
     printf("\nInforme as informacoes do quarto:");
     printf("\nNumero: ");
@@ -84,6 +80,7 @@ Quartos cadastrar_quartos(Quartos quarto)
     printf("\n\t1 - solteiro\n\t2 - casal\n\t3 - suite.\n");
     setbuf(stdin, NULL);
     scanf("%d", &quarto.tipo);
+
     printf("Informe o status do quarto: ");
     printf("\n\t1 - vago\n\t2 - ocupado: \n");
     setbuf(stdin, NULL);
@@ -93,14 +90,14 @@ Quartos cadastrar_quartos(Quartos quarto)
     {
         for (int dia = 0; dia < 31; dia++)
         {
-            quarto.status[mes][dia].status = stts;
+            quarto.status[mes][dia] = stts;
         }
     }
 
     return quarto;
 }
 
-void imprimir_quartos(Quartos quarto)
+void imprimir_quarto(Quartos quarto)
 {
     printf("Numero: %d\n", quarto.numero_quarto);
     printf("Valor: %.2f\n", quarto.valor);
@@ -109,7 +106,7 @@ void imprimir_quartos(Quartos quarto)
     {
         for (int dia = 0; dia < 31; dia++)
         {
-            printf("Status do mes %d no dia %d = %d\n", mes + 1, dia + 1, quarto.status[mes][dia].status);
+            printf("Status do mes %d no dia %d = %d\n", mes + 1, dia + 1, quarto.status[mes][dia]);
         }
         printf("\n");
     }
@@ -127,7 +124,7 @@ void buscar_por_numero(Quartos *quarto, int contq)
     {
         if (quarto[i].numero_quarto == id)
         {
-            imprimir_quartos(quarto[i]);
+            imprimir_quarto(quarto[i]);
         }
     }
 }
@@ -138,7 +135,7 @@ void buscar_por_tipo(Quartos *quarto, int contq)
     int tip;
 
     printf("Informe o tipo de quarto que deseja consultar: \n");
-    printf("\n\t0 - casal\n\t1 - solteiro\n\t2 - suite.\n");
+    printf("\n\t1 - casal\n\t2 - solteiro\n\t3 - suite.\n");
     setbuf(stdin, NULL);
     scanf("%d", &tip);
 
@@ -146,11 +143,12 @@ void buscar_por_tipo(Quartos *quarto, int contq)
     {
         if (quarto[i].tipo == tip)
         {
-            imprimir_quartos(quarto[i]);
+            imprimir_quarto(quarto[i]);
         }
     }
 }
 
+//falta fazer
 void menu_busca_quartos(Quartos *quarto, int contq)
 {
     int op;
@@ -166,13 +164,11 @@ void menu_busca_quartos(Quartos *quarto, int contq)
     }
 }
 
+//edita apenas preço
 void editar_quarto(Quartos *quarto, int contq)
 {
-
     int i = 0;
     int id;
-
-    
 
     printf("Informe o numero do quarto que deseja realizar a alteracao do valor: \n");
     scanf("%d", &id);
@@ -187,8 +183,10 @@ void editar_quarto(Quartos *quarto, int contq)
     }
 }
 
-Cliente cadastrar_informacoes_clientes(Cliente cliente)
+Cliente cadastrar_informacoes_clientes()
 {
+    Cliente cliente;
+
     printf("\nInforme as suas informacoes:");
     printf("\nNome: ");
     setbuf(stdin, NULL);
@@ -230,10 +228,12 @@ void mostrar_cliente(Cliente cliente)
     printf("\nNome: %s\n", cliente.nome);
     printf("Data de nascimento: %d/%d/%d\n", cliente.dia, cliente.mes, cliente.ano);
     printf("Telefone: %s\n", cliente.telefone);
+    printf("Email: %s\n", cliente.email);
     printf("CPF: %s\n", cliente.cpf);
     printf("RG: %s\n", cliente.rg);
     printf("Rua: %s\n", cliente.rua);
     printf("Cidade: %s\n\n", cliente.cidade);
+    
 }
 
 void buscar_por_cpf(Cliente *cliente, int *contc, int tam)
@@ -379,6 +379,7 @@ void menu_busca_clientes(Cliente *cliente, int *contc, int tam)
     }
 }
 
+//mexe com arquivo
 void menu_cliente(Cliente *cliente, int *contc, FILE *arquivo_cliente, int tam)
 {
     int op;
@@ -397,14 +398,17 @@ void menu_cliente(Cliente *cliente, int *contc, FILE *arquivo_cliente, int tam)
         if (arquivo_cliente == NULL)
         {
             printf("Não foi possivel abrir o arquivo.");
-            return;
+
         }
+        else
+        {
         if (*contc < tam)
         {
             cliente[*contc] = cadastrar_informacoes_clientes(cliente[*contc]);
             fprintf(arquivo_cliente, "%s %d/%d/%d %s %s %s %s %s %s\n", cliente[*contc].nome, cliente[*contc].dia, cliente[*contc].mes, cliente[*contc].ano, cliente[*contc].telefone, cliente[*contc].cpf, cliente[*contc].rg, cliente[*contc].rua, cliente[*contc].cidade, cliente[*contc].email);
             fclose(arquivo_cliente);
             *contc += 1;
+        }
         }
         break;
 
@@ -442,7 +446,7 @@ void reserva_quartos(Quartos *quarto, int contq, Cliente *cliente, Reserva *rese
 
         printf("informe o dia de inicio e o de saida: ");
         setbuf(stdin, NULL);
-        scanf("%d%d", &d_inicial, &d_final);
+        scanf("%d %d", &d_inicial, &d_final);
 
         printf("Informe se o mes que voce deseja realizar a reserva\n\n");
         setbuf(stdin, NULL);
@@ -452,7 +456,7 @@ void reserva_quartos(Quartos *quarto, int contq, Cliente *cliente, Reserva *rese
         {
             for (dia = d_inicial; dia <= d_final; dia++)
             {
-                if (quarto[i].tipo == 1 && quarto[i].status[mes - 1][dia].status == 1)
+                if (quarto[i].tipo == 1 && quarto[i].status[mes - 1][dia] == 1)
                 {
                     printf("Numero: %d\n", quarto[i].numero_quarto);
                     printf("Valor: %.2f\n", quarto[i].valor);
@@ -470,12 +474,12 @@ void reserva_quartos(Quartos *quarto, int contq, Cliente *cliente, Reserva *rese
         {
             for (dia = d_inicial; dia <= d_final; dia++)
             {
-                if (quarto[i].numero_quarto == num && quarto[i].status[mes - 1][dia - 1].status == 1)
+                if (quarto[i].numero_quarto == num && quarto[i].status[mes - 1][dia - 1] == 1)
                 {
-                    quarto[i].status[mes - 1][dia - 1].status = 3; // 3 - reservado
+                    quarto[i].status[mes - 1][dia - 1]= 3; // 3 - reservado
                     valor += quarto[i].valor;
                 }
-                else if (quarto[i].status[mes - 1][dia - 1].status == 3)
+                else if (quarto[i].status[mes - 1][dia - 1] == 3)
                 {
                     printf("O quarto informado já está reservado!!");
                     break;
@@ -492,9 +496,8 @@ void reserva_quartos(Quartos *quarto, int contq, Cliente *cliente, Reserva *rese
                     {
                         if (quarto[k].numero_quarto == num)
                         {
-                            strcpy(reserva[j].nome, cliente[i].nome);
-                            strcpy(reserva[j].cpf, cliente[i].cpf);
-                            strcpy(reserva[j].telefone, cliente[i].telefone);
+
+                            reserva[j].cliente = *cliente;
                             reserva[j].nmr_quarto = num;
                             reserva[j].d_inicial = d_inicial;
                             reserva[j].d_final = d_final;
@@ -523,7 +526,7 @@ void reserva_quartos(Quartos *quarto, int contq, Cliente *cliente, Reserva *rese
         {
             for (dia = d_inicial; dia <= d_final; dia++)
             {
-                if (quarto[i].tipo == 2 && quarto[i].status[mes - 1][dia - 1].status == 1)
+                if (quarto[i].tipo == 2 && quarto[i].status[mes - 1][dia - 1] == 1)
                 {
                     printf("Numero: %d\n", quarto[i].numero_quarto);
                     printf("Valor: %.2f\n", quarto[i].valor);
@@ -541,12 +544,12 @@ void reserva_quartos(Quartos *quarto, int contq, Cliente *cliente, Reserva *rese
         {
             for (dia = d_inicial; dia <= d_final; dia++)
             {
-                if (quarto[i].numero_quarto == num && quarto[i].status[mes - 1][dia - 1].status == 1)
+                if (quarto[i].numero_quarto == num && quarto[i].status[mes - 1][dia - 1] == 1)
                 {
-                    quarto[i].status[mes - 1][dia - 1].status = 3; // 3 - reservado
+                    quarto[i].status[mes - 1][dia - 1] = 3; // 3 - reservado
                     valor += quarto[i].valor;
                 }
-                else if (quarto[i].status[mes - 1][dia - 1].status == 3)
+                else if (quarto[i].status[mes - 1][dia - 1]== 3)
                 {
                     printf("O quarto informado já está reservado!!");
                     break;
@@ -557,9 +560,7 @@ void reserva_quartos(Quartos *quarto, int contq, Cliente *cliente, Reserva *rese
         {
             if (cliente[i].cpf == cpf)
             {
-                strcpy(reserva[i].nome, cliente[i].nome);
-                strcpy(reserva[i].cpf, cliente[i].cpf);
-                strcpy(reserva[i].telefone, cliente[i].telefone);
+                reserva[i].cliente = *cliente;
                 reserva[i].nmr_quarto = quarto[i].numero_quarto;
                 reserva[i].d_inicial = d_inicial;
                 reserva[i].d_final = d_final;
@@ -584,7 +585,7 @@ void reserva_quartos(Quartos *quarto, int contq, Cliente *cliente, Reserva *rese
         {
             for (dia = d_inicial; dia <= d_final; dia++)
             {
-                if (quarto[i].tipo == 3 && quarto[i].status[mes - 1][dia - 1].status == 1)
+                if (quarto[i].tipo == 3 && quarto[i].status[mes - 1][dia - 1] == 1)
                 {
                     printf("Numero: %d\n", quarto[i].numero_quarto);
                     printf("Valor: %.2f\n", quarto[i].valor);
@@ -602,12 +603,12 @@ void reserva_quartos(Quartos *quarto, int contq, Cliente *cliente, Reserva *rese
         {
             for (dia = d_inicial; dia <= d_final; dia++)
             {
-                if (quarto[i].numero_quarto == num && quarto[i].status[mes - 1][dia - 1].status == 1)
+                if (quarto[i].numero_quarto == num && quarto[i].status[mes - 1][dia - 1] == 1)
                 {
-                    quarto[i].status[mes - 1][dia - 1].status = 3; // 3 - reservado
+                    quarto[i].status[mes - 1][dia - 1] = 3; // 3 - reservado
                     valor += quarto[i].valor;
                 }
-                else if (quarto[i].status[mes - 1][dia - 1].status == 3)
+                else if (quarto[i].status[mes - 1][dia - 1] == 3)
                 {
                     printf("O quarto informado já está reservado!!");
                     break;
@@ -618,9 +619,7 @@ void reserva_quartos(Quartos *quarto, int contq, Cliente *cliente, Reserva *rese
         {
             if (cliente[i].cpf == cpf)
             {
-                strcpy(reserva[i].nome, cliente[i].nome);
-                strcpy(reserva[i].cpf, cliente[i].cpf);
-                strcpy(reserva[i].telefone, cliente[i].telefone);
+                reserva[i].cliente = *cliente;
                 reserva[i].nmr_quarto = quarto[i].numero_quarto;
                 reserva[i].d_inicial = d_inicial;
                 reserva[i].d_final = d_final;
@@ -636,9 +635,9 @@ void reserva_quartos(Quartos *quarto, int contq, Cliente *cliente, Reserva *rese
 void listar_reservas(Reserva reserva)
 {
 
-    printf("\nNome: %s", reserva.nome);
-    printf("\nCPF: %s", reserva.cpf);
-    printf("\nTelefone: %s", reserva.telefone);
+    printf("\nNome do cliente : %s", reserva.cliente.nome);
+    printf("\nCPF: %s", reserva.cliente.cpf);
+    printf("\nTelefone: %s", reserva.cliente.telefone);
     printf("\nNumero do quarto: %d", reserva.nmr_quarto);
     printf("\nDia de inicio: %d", reserva.d_inicial);
     printf("\nDia final: %d", reserva.d_final);
@@ -665,7 +664,7 @@ void menu_listar_reservas(Reserva *reserva, int qreserva)
         scanf("%[^\n]", cpf);
         for (j = 0; j < qreserva; j++)
         {
-            if (strcmp(reserva[j].cpf, cpf) == 0)
+            if (strcmp(reserva[j].cliente.cpf, cpf) == 0)
             {
                 listar_reservas(reserva[j]);
             }
@@ -729,7 +728,7 @@ void menu_quarto(Quartos *quarto, int *contq, FILE *arquivo_quarto, int tam)
                     for (j = 0; j < 31; j++)
                     {
                         
-                        fprintf(arquivo_quarto, "Status do mes %d no dia %d = %d\n", i + 1, j + 1, quarto[*contq].status[i][j].status);
+                        fprintf(arquivo_quarto, "Status do mes %d no dia %d = %d\n", i + 1, j + 1, quarto[*contq].status[i][j]);
                         
                     }
                 }
@@ -768,7 +767,7 @@ void realizar_pagamento(Quartos *quarto, int contq, Reserva *reserva, int contc)
 
     for (i = 0; i < contc; i++)
     {
-        if (strcmp(reserva[i].cpf, cpf) == 0)
+        if (strcmp(reserva[i].cliente.cpf, cpf) == 0)
         {
             printf("valor do pagamento: %.2f \n", reserva[i].valor_reserva);
             printf("Pagamento concluído? \n");
@@ -809,10 +808,10 @@ void checking(Quartos *quarto, int contq, Reserva *reserva, int contc, int *qche
 
     for (i = 0; i < contc; i++)
     {
-        if (strcmp(reserva[i].cpf, cpf) == 0)
+        if (strcmp(reserva[i].cliente.cpf, cpf) == 0)
         {
-            printf("nome: %s\n", reserva[i].nome);
-            printf("CPF: %s\n", reserva[i].cpf);
+            printf("nome: %s\n", reserva[i].cliente.nome);
+            printf("CPF: %s\n", reserva[i].cliente.cpf);
             printf("Numero do quarto: %d\n", reserva[i].nmr_quarto);
             printf("Codigo de reserva: %d\n", reserva[i].cod_reserva);
             printf("Valor total: %.2f\n", reserva[i].valor_reserva);
@@ -829,7 +828,7 @@ void checking(Quartos *quarto, int contq, Reserva *reserva, int contc, int *qche
                 {
                     for (j = dia_i; j <= dia_f; j++)
                     {
-                        quarto[k].status[mes - 1][j].status = 2;
+                        quarto[k].status[mes - 1][j] = 2;
                     }
                 }
             }
@@ -851,7 +850,8 @@ void checking(Quartos *quarto, int contq, Reserva *reserva, int contc, int *qche
 void checkout(Quartos *quarto, int contq, Reserva *reserva, int contc)
 {
     int i = 0, j = 0, k = 0;
-    char cpf[12], r[5], op[5];
+    char cpf[12];
+    int op, r;
 
     int dia_f, dia_i, mes;
 
@@ -860,16 +860,16 @@ void checkout(Quartos *quarto, int contq, Reserva *reserva, int contc)
 
     for (i = 0; i < contc; i++)
     {
-        if (strcmp(reserva[i].cpf, cpf) == 0)
+        if (strcmp(reserva[i].cliente.cpf, cpf) == 0)
         {
-            printf("nome: %s ", reserva[i].nome);
-            printf("CPF: %s ", reserva[i].cpf);
+            printf("nome: %s ", reserva[i].cliente.nome);
+            printf("CPF: %s ", reserva[i].cliente.cpf);
             printf("Numero do quarto: %d ", reserva[i].nmr_quarto);
             printf("Codigo de reserva: %d ", reserva[i].cod_reserva);
 
-            printf("Deseja realizar check-out? ");
-            scanf("%[^\n]", op);
-            if (strcmp(op, 'sim') == 0)
+            printf("Deseja realizar check-out? [1 - SIM / 0 - Nao]");
+            scanf("%d", &op);
+            if (op==1)
             {
                 mes = reserva[i].mes;
                 dia_i = reserva[i].d_inicial;
@@ -879,14 +879,14 @@ void checkout(Quartos *quarto, int contq, Reserva *reserva, int contc)
                 {
                     for (j = dia_i; j <= dia_f; j++)
                     {
-                        quarto[k].status[mes - 1][j].status = 1;
+                        quarto[k].status[mes - 1][j] = 1;
                     }
                 }
             }
         }
     }
     printf("Já realizou pagamento? \n");
-    scanf(" %[^\n]", r);
+    scanf(" %d", &r);
 
     for (i = 0; i < contc; i++)
     {
@@ -895,7 +895,7 @@ void checkout(Quartos *quarto, int contq, Reserva *reserva, int contc)
         dia_f = reserva[i].d_final;
     }
 
-    if (strcmp(r, "nao") == 0)
+    if (r==1)
     {
         realizar_pagamento(quarto, contq, reserva, contq);
     }
@@ -946,6 +946,7 @@ int main()
             break;
         case 5:
             checkout(quartos, contq, reserva, contc);
+            break;
         default:
             printf("Opcao invalida!");
             break;
