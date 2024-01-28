@@ -1,4 +1,4 @@
-//o que precisa terminar de fazer:
+// o que precisa terminar de fazer:
 
 /*
 funções de editar e excluir do arquivo
@@ -85,7 +85,7 @@ typedef struct Checkin
 int menu_principal()
 { // menu 0
     int op;
-    printf("\n1 - Informacoes dos quartos\n2 - Informacoes do cliente\n0 - Sair\n");
+    printf("\n1 - Informacoes dos quartos\n2 - Informacoes do cliente\n0 - Sair\n\nResposta: ");
     setbuf(stdin, NULL);
     scanf("%d", &op);
     return op;
@@ -327,6 +327,7 @@ void buscar_por_cpf(Cliente *cliente, int *contc, int tam)
 {
 
     int i = 0;
+    int cadastrado = 0;
     char cpf[12];
 
     printf("Informe o numero de cpf que deseja consultar: \n");
@@ -338,16 +339,22 @@ void buscar_por_cpf(Cliente *cliente, int *contc, int tam)
         if (strcmp(cliente[i].cpf, cpf) == 0)
         {
             mostrar_cliente(cliente[i]);
+            cadastrado = 1;
         }
-        else if (*contc < tam)
-        {
-            cliente[*contc] = cadastrar_informacoes_clientes(cliente[*contc]);
-        }
+    }
+
+    if (cadastrado == 0 && *contc < tam)
+    {
+
+        printf("\nCliente nao encontrado, entao vamos cadastralo!");
+        (*contc)++;
+        cliente[*contc] = cadastrar_informacoes_clientes();
     }
 }
 
 void buscar_por_rg(Cliente *cliente, int *contc, int tam)
 {
+    int cadastrado = 0;
 
     int i = 0;
     char rg[7];
@@ -361,11 +368,15 @@ void buscar_por_rg(Cliente *cliente, int *contc, int tam)
         if (strcmp(cliente[i].rg, rg) == 0)
         {
             mostrar_cliente(cliente[i]);
+            cadastrado = 1;
         }
-        else if (*contc < tam)
-        {
-            cliente[*contc] = cadastrar_informacoes_clientes(cliente[*contc]);
-        }
+    }
+
+    if (cadastrado == 0 && *contc < tam)
+    {
+        printf("\nCliente nao encontrado, entao vamos cadastralo!");
+        (*contc)++;
+        cliente[*contc] = cadastrar_informacoes_clientes();
     }
 }
 
@@ -467,7 +478,7 @@ void menu_busca_clientes(Cliente *cliente, int *contc, int tam)
 }
 
 // mexe com arquivo
-void menu_cliente(Cliente *cliente, int *contc, FILE *arquivo_cliente, int tam)
+void menu_cliente(Cliente *cliente, int *contc, int tam)
 {
     int op;
 
@@ -485,8 +496,7 @@ void menu_cliente(Cliente *cliente, int *contc, FILE *arquivo_cliente, int tam)
         if (*contc < tam)
         {
             cliente[*contc] = cadastrar_informacoes_clientes(cliente[*contc]);
-            fprintf(arquivo_cliente, "%s %d/%d/%d %s %s %s %s %s %s\n", cliente[*contc].nome, cliente[*contc].dia, cliente[*contc].mes, cliente[*contc].ano, cliente[*contc].telefone, cliente[*contc].cpf, cliente[*contc].rg, cliente[*contc].rua, cliente[*contc].cidade, cliente[*contc].email);
-            fclose(arquivo_cliente);
+
             *contc += 1;
         }
         break;
@@ -498,7 +508,7 @@ void menu_cliente(Cliente *cliente, int *contc, FILE *arquivo_cliente, int tam)
         menu_editar_cliente(cliente, contc, tam);
         break;
     default:
-        printf("Opcao invalida!");
+        printf("\nOpcao invalida!");
         break;
     }
 }
@@ -1006,10 +1016,12 @@ void consultar_valores(Quartos *quartos, int contq)
     printf("%.2f \n", soma);
 }
 
+/*
 int main()
 {
     int op;
     int tam = 50;
+    int i;
 
     int qchecking = 0;
     int qreserva = 0;
@@ -1023,13 +1035,46 @@ int main()
     FILE *arquivo_quartos = fopen("quartos.txt", "a+");
     FILE *arq_q_temporario = fopen("tempQuarto.txt", "w");
 
-    FILE *arquivo_clientes = fopen("cliente.txt", "a+");
+    FILE *arquivo_clientes = fopen("cliente.txt", "r");
+    if (arquivo_clientes == NULL)
+        printf("Falhei");
+    else
+        printf("\nAchei");
 
     // FILE *valores = fopen("valores_arrecadado", "a+");
     quartos = (Quartos *)calloc(tam, sizeof(Quartos));
     clientes = (Cliente *)calloc(tam, sizeof(Cliente));
     reserva = (Reserva *)calloc(1000, sizeof(Reserva));
     checkin = (Checkin *)calloc(1000, sizeof(Checkin));
+
+    char linha[100];  // Ajuste o tamanho conforme necessário
+
+    // Lê uma linha por vez até o final do arquivo
+    while (fgets(linha, sizeof(linha), arquivo_clientes) != NULL) {
+        contc++;
+    }
+    printf("\nLinhas = %d", contc);
+
+    Cliente aux;
+
+    for (i = 0; i < contc; i++)
+    {
+        fscanf(arquivo_clientes, "%s %d %d %d %s %s %s %s %s %s",
+               aux.nome,
+               &aux.dia,
+               &aux.mes,
+               &aux.ano,
+               aux.telefone,
+               aux.cpf,
+               aux.rg,
+               aux.rua,
+               aux.cidade,
+               aux.email);
+
+        clientes[i] = aux;
+        mostrar_cliente(clientes[i]);
+    }
+
     do
     {
         op = menu_principal();
@@ -1039,7 +1084,7 @@ int main()
             menu_quarto(quartos, &contq, arquivo_quartos, tam);
             break;
         case 2:
-            menu_cliente(clientes, &contc, arquivo_clientes, tam);
+            menu_cliente(clientes, &contc, tam);
             break;
         case 3:
             menu_reserva(quartos, contq, clientes, reserva, contc, &qreserva);
@@ -1062,6 +1107,14 @@ int main()
     fclose(arquivo_quartos);
     fclose(arq_q_temporario);
 
+    // passando os clientes da memória para o arquivo
+    fclose(arquivo_clientes);
+    arquivo_clientes = fopen("cliente.txt", "r");
+
+    for (i = 0; i < contc; i++)
+
+        fprintf(arquivo_clientes, "%s %d %d %d %s %s %s %s %s %s\n", clientes[i].nome, clientes[i].dia, clientes[i].mes, clientes[i].ano, clientes[i].telefone, clientes[i].cpf, clientes[i].rg, clientes[i].rua, clientes[i].cidade, clientes[i].email);
+
     fclose(arquivo_clientes);
 
     // fclose(valores);
@@ -1070,6 +1123,63 @@ int main()
     free(clientes);
     free(reserva);
     free(checkin);
+
+    return 0;
+}
+*/
+void salvar_clientes_binario(Cliente *clientes, int contc)
+{
+    FILE *arquivo_clientes = fopen("clientes.bin", "wb");
+
+    if (arquivo_clientes == NULL)
+    {
+        perror("Erro ao abrir o arquivo para escrita binária");
+        exit(1);
+    }
+
+    // Escreve todos os clientes no arquivo binário
+    fwrite(clientes, sizeof(Cliente), contc, arquivo_clientes);
+
+    fclose(arquivo_clientes);
+}
+
+int main()
+{
+    int contc = 0;
+    Cliente *clientes;
+
+    // Abrir arquivo binário para leitura
+    FILE *arquivo_clientes = fopen("clientes.bin", "a+b");
+    if (arquivo_clientes == NULL)
+    {
+        printf("Arquivo não encontrado ou falha ao abrir.\n");
+    }
+    else
+    {
+        // Contar o número de registros no arquivo binário
+        fseek(arquivo_clientes, 0, SEEK_END);
+        contc = ftell(arquivo_clientes) / sizeof(Cliente);
+        rewind(arquivo_clientes);
+
+        // Alocar memória para armazenar os clientes
+        clientes = (Cliente *)malloc(contc * sizeof(Cliente));
+
+        // Ler os clientes do arquivo binário
+        fread(clientes, sizeof(Cliente), contc, arquivo_clientes);
+
+        // Fechar o arquivo
+        fclose(arquivo_clientes);
+
+        // Exibir os clientes
+        for (int i = 0; i < contc; i++)
+        {
+            printf("Cliente %d:\n", i + 1);
+            mostrar_cliente(clientes[i]);
+        }
+
+        // Liberar memória
+        free(clientes);
+    }
 
     return 0;
 }
