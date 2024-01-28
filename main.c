@@ -32,6 +32,7 @@ intervalo de tempo definido pelo usuário.)
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#define MAX_CLIENTES 100 // Defina o tamanho máximo do vetor
 
 // Aqui você pode ter diferentes valores para representar os estados (livre, ocupado, reservado, etc.)
 
@@ -1127,58 +1128,135 @@ int main()
     return 0;
 }
 */
-void salvar_clientes_binario(Cliente *clientes, int contc)
-{
-    FILE *arquivo_clientes = fopen("clientes.bin", "wb");
 
-    if (arquivo_clientes == NULL)
+// Função para preencher um vetor de clientes a partir de um arquivo binário
+int lerClientesDoArquivo(Cliente vetor[], char nomeArquivo[])
+{
+    FILE *arquivo;
+    int numClientes = 0;
+    int resultado;
+    Cliente c;
+
+    arquivo = fopen(nomeArquivo, "a+b");
+
+    if (arquivo == NULL)
+        numClientes = -1;
+    else
     {
-        perror("Erro ao abrir o arquivo para escrita binária");
-        exit(1);
+        // Lê as estruturas do arquivo e as coloca no veto
+        while (!feof(arquivo))
+        {
+            resultado = fread(&c, sizeof(Cliente), 1, arquivo);
+            if (resultado != 0)
+            {
+                vetor[numClientes] = c;
+        
+                numClientes++;
+            }
+        }
+
+        fclose(arquivo);
     }
 
-    // Escreve todos os clientes no arquivo binário
-    fwrite(clientes, sizeof(Cliente), contc, arquivo_clientes);
+    return numClientes; // Retorna o número de clientes lidos
+}
+/*
+int criar_arquivo(char nomeArquivo[])
+{
+    FILE *arquivo = fopen(nomeArquivo, "a+b");
+    int criei = 0;
 
-    fclose(arquivo_clientes);
+    if (arquivo != NULL)
+        criei = 1;
+
+    return criei;
+}
+*/
+// Função para salvar um vetor de clientes em um arquivo binário
+void salvarClientesNoArquivo(Cliente vetor[], int numClientes, const char *nomeArquivo)
+{
+    FILE *arquivo;
+    arquivo = fopen(nomeArquivo, "wb");
+
+
+    if (arquivo == NULL)
+    {
+        perror("Erro ao abrir o arquivo");
+    }
+    else
+    {
+        int i = 0;
+        while (i < numClientes)
+        {
+            fwrite(&vetor[i], sizeof(Cliente), 1, arquivo);
+            if (ferror(arquivo))
+                printf("\nErro na gravacao");
+            else
+                printf("\nSalvo com Sucesso\n");
+            i++;
+        }
+
+        // Escreve as estruturas do vetor no arquivo
+
+        fclose(arquivo);
+    }
+
 }
 
 int main()
 {
-    int contc = 0;
-    Cliente *clientes;
+    Cliente vetor[MAX_CLIENTES];
+    int numClientes;
+    int i = 0, opc = 1;
 
-    // Abrir arquivo binário para leitura
-    FILE *arquivo_clientes = fopen("clientes.bin", "a+b");
-    if (arquivo_clientes == NULL)
+    // Preenche o vetor com base nos dados do arquivo binário
+    numClientes = lerClientesDoArquivo(vetor, "clientes.bin");
+
+    if (numClientes == -1)
     {
-        printf("Arquivo não encontrado ou falha ao abrir.\n");
+        // Trate o caso de falha na leitura, se necessário
+        printf("\nNão foi possível ler clientes do arquivo.\n\nLogo um novo arquivo deve ser criado");
     }
     else
     {
-        // Contar o número de registros no arquivo binário
-        fseek(arquivo_clientes, 0, SEEK_END);
-        contc = ftell(arquivo_clientes) / sizeof(Cliente);
-        rewind(arquivo_clientes);
-
-        // Alocar memória para armazenar os clientes
-        clientes = (Cliente *)malloc(contc * sizeof(Cliente));
-
-        // Ler os clientes do arquivo binário
-        fread(clientes, sizeof(Cliente), contc, arquivo_clientes);
-
-        // Fechar o arquivo
-        fclose(arquivo_clientes);
-
-        // Exibir os clientes
-        for (int i = 0; i < contc; i++)
+        printf("\nTotal de Clientes = %d\n", numClientes);
+        while (opc != 0)
         {
-            printf("Cliente %d:\n", i + 1);
-            mostrar_cliente(clientes[i]);
+            printf("\n1 - Cadastrar Cliente");
+            printf("\n2 - Mostrar Clientes");
+            printf("\n0 - Sair Cliente");
+            printf("\n\nSua resposta: ");
+            setbuf(stdin, NULL);
+            scanf("%d", &opc);
+
+            switch (opc)
+            {
+            case 1:
+                vetor[numClientes] = cadastrar_informacoes_clientes();
+
+                numClientes++;
+                break;
+
+            case 2:
+                for (i = 0; i < numClientes; i++)
+                    mostrar_cliente(vetor[i]);
+
+                break;
+
+            case 0:
+                break;
+            default:
+                break;
+            }
         }
 
-        // Liberar memória
-        free(clientes);
+        // Faça operações com o vetor, se necessário
+
+        // Salva o vetor em um novo arquivo binário
+        if (numClientes > 0)
+        {
+           salvarClientesNoArquivo(vetor, numClientes, "clientes.bin");
+        }
     }
 
     return 0;
