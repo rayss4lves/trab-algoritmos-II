@@ -1,3 +1,18 @@
+//o que precisa terminar de fazer:
+
+/*
+funções de editar e excluir do arquivo
+
+Caso o quarto solicitado pelo cliente esteja
+reservado, uma mensagem de erro deve ser mostrada e, em seguida, uma lista
+quartos disponíveis devem ser exibidos. Se o cliente escolher outro quarto, a
+função deve ser reiniciada e concluída, produzindo um código automáƟco de
+reserva.
+
+controle de fluxo financeiro( Permitir a consulta de todos os valores recebidos durante um
+intervalo de tempo definido pelo usuário.)
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
