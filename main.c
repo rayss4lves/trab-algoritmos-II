@@ -72,7 +72,7 @@ typedef struct Checkin
 int menu_principal()
 { // menu 0
     int op;
-    printf("1 - Informacoes dos quartos\n2 - Informacoes do cliente\n0 - Sair\n");
+    printf("\n\n1 - Informacoes dos quartos\n2 - Informacoes do cliente\n3 - Reserva\n4 - Checkin\n5 - Checkout\n0 - Sair\n");
     setbuf(stdin, NULL);
     scanf("%d", &op);
     return op;
@@ -225,7 +225,6 @@ void excluirInformacaoArquivo(const char *nomeArquivo, const char *informacaoPar
 }
 void excluir_quarto()
 {
-    int i = 0;
     int id;
 
     printf("Informe o numero do quarto que deseja excluir: \n");
@@ -586,8 +585,10 @@ void reserva_quartos(Quartos *quarto, int contq, Cliente *cliente, Reserva *rese
         printf("informe o quarto que deseja reservar: ");
         scanf("%d", &num);
         fflush(stdin);
+
         printf("Informe o seu cpf: ");
         scanf("%[^\n]", cpf);
+
         for (int i = 0; i < contq; i++)
         {
             for (dia = d_inicial; dia <= d_final; dia++)
@@ -599,7 +600,8 @@ void reserva_quartos(Quartos *quarto, int contq, Cliente *cliente, Reserva *rese
                 }
                 else if (quarto[i].status[mes - 1][dia - 1] == 3)
                 {
-                    printf("O quarto informado já está reservado!!");
+                    printf("\nO quarto informado já está reservado!!\n");
+                    reserva_quartos(quarto,contq,cliente,reserva,contc);
                     break;
                 }
             }
@@ -628,8 +630,7 @@ void reserva_quartos(Quartos *quarto, int contq, Cliente *cliente, Reserva *rese
                     }
                 }
             }
-        }
-
+        } 
         break;
     case 2:
 
@@ -867,6 +868,7 @@ void menu_quarto(Quartos *quarto, int *contq, FILE *arquivo_quarto, int tam, FIL
         break;
     case 4:
         excluir_quarto();
+        break;
     default:
         printf("Opcao invalida!");
         break;
@@ -967,7 +969,8 @@ void checking(Quartos *quarto, int contq, Reserva *reserva, int contc, int *qche
 void checkout(Quartos *quarto, int contq, Reserva *reserva, int contc)
 {
     int i = 0, j = 0, k = 0;
-    char cpf[12], r[5], op[5];
+    char cpf[12], r[5];
+    int op;
 
     int dia_f, dia_i, mes;
 
@@ -983,9 +986,9 @@ void checkout(Quartos *quarto, int contq, Reserva *reserva, int contc)
             printf("Numero do quarto: %d ", reserva[i].nmr_quarto);
             printf("Codigo de reserva: %d ", reserva[i].cod_reserva);
 
-            printf("Deseja realizar check-out? ");
-            scanf("%[^\n]", op);
-            if (strcmp(op, 'sim') == 0)
+            printf("Deseja realizar check-out? [1 - sim][2 - nao]");
+            scanf("%d", &op);
+            if (op == 1)
             {
                 mes = reserva[i].mes;
                 dia_i = reserva[i].d_inicial;
@@ -1051,6 +1054,11 @@ int main()
         op = menu_principal();
         switch (op)
         {
+            
+        case 0:
+            printf("\n\nSistema Encerrado!");
+            break;
+
         case 1:
             menu_quarto(quartos, &contq, arquivo_quartos, tam, temp1);
             break;
@@ -1065,6 +1073,7 @@ int main()
             break;
         case 5:
             checkout(quartos, contq, reserva, contc);
+            break;
         default:
             printf("Opcao invalida!");
             break;
