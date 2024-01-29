@@ -13,28 +13,10 @@ controle de fluxo financeiro( Permitir a consulta de todos os valores recebidos 
 intervalo de tempo definido pelo usuário.)
 */
 
-// o que precisa terminar de fazer:
-
-/*
-funções de editar e excluir do arquivo
-
-Caso o quarto solicitado pelo cliente esteja
-reservado, uma mensagem de erro deve ser mostrada e, em seguida, uma lista
-quartos disponíveis devem ser exibidos. Se o cliente escolher outro quarto, a
-função deve ser reiniciada e concluída, produzindo um código automáƟco de
-reserva.
-
-controle de fluxo financeiro( Permitir a consulta de todos os valores recebidos durante um
-intervalo de tempo definido pelo usuário.)
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#define MAX_CLIENTES 100 // Defina o tamanho máximo do vetor
-
-// Aqui você pode ter diferentes valores para representar os estados (livre, ocupado, reservado, etc.)
 
 typedef struct Quartos
 {
@@ -43,7 +25,6 @@ typedef struct Quartos
     int tipo;
     float valor;
     int qchecking;
-    float arrecadacao[12][31];
 } Quartos;
 
 typedef struct Cliente
@@ -62,7 +43,10 @@ typedef struct Cliente
 
 typedef struct Reserva
 {
-    struct Cliente cliente;
+
+    char nome[50];
+    char cpf[15];
+    char telefone[15];
     int nmr_quarto;
     int ano; // salvar automaticamente o ano com a time
     int mes;
@@ -76,26 +60,26 @@ typedef struct Reserva
 
 typedef struct Checkin
 {
+
     int hora;
     int min;
     int dia;
     int mes;
     int ano;
+
 } Checkin;
 
 int menu_principal()
 { // menu 0
     int op;
-    printf("\n1 - Informacoes dos quartos\n2 - Informacoes do cliente\n0 - Sair\n\nResposta: ");
+    printf("1 - Informacoes dos quartos\n2 - Informacoes do cliente\n0 - Sair\n");
     setbuf(stdin, NULL);
     scanf("%d", &op);
     return op;
 }
 
-Quartos cadastrar_quartos()
+Quartos cadastrar_quartos(Quartos quarto)
 {
-    Quartos quarto;
-
     int stts;
     printf("\nInforme as informacoes do quarto:");
     printf("\nNumero: ");
@@ -110,7 +94,6 @@ Quartos cadastrar_quartos()
     printf("\n\t1 - solteiro\n\t2 - casal\n\t3 - suite.\n");
     setbuf(stdin, NULL);
     scanf("%d", &quarto.tipo);
-
     printf("Informe o status do quarto: ");
     printf("\n\t1 - vago\n\t2 - ocupado: \n");
     setbuf(stdin, NULL);
@@ -127,7 +110,7 @@ Quartos cadastrar_quartos()
     return quarto;
 }
 
-void imprimir_quarto(Quartos quarto)
+void imprimir_quartos(Quartos quarto)
 {
     printf("Numero: %d\n", quarto.numero_quarto);
     printf("Valor: %.2f\n", quarto.valor);
@@ -154,7 +137,7 @@ void buscar_por_numero(Quartos *quarto, int contq)
     {
         if (quarto[i].numero_quarto == id)
         {
-            imprimir_quarto(quarto[i]);
+            imprimir_quartos(quarto[i]);
         }
     }
 }
@@ -165,7 +148,7 @@ void buscar_por_tipo(Quartos *quarto, int contq)
     int tip;
 
     printf("Informe o tipo de quarto que deseja consultar: \n");
-    printf("\n\t1 - casal\n\t2 - solteiro\n\t3 - suite.\n");
+    printf("\n\t0 - casal\n\t1 - solteiro\n\t2 - suite.\n");
     setbuf(stdin, NULL);
     scanf("%d", &tip);
 
@@ -173,51 +156,7 @@ void buscar_por_tipo(Quartos *quarto, int contq)
     {
         if (quarto[i].tipo == tip)
         {
-            imprimir_quarto(quarto[i]);
-        }
-    }
-}
-
-void buscar_por_status(Quartos *quarto, int contq)
-{
-    int i = 0;
-    int stts, j = 0, mes;
-
-    printf("Informe o tipo de quarto que deseja consultar: \n");
-    printf("\n\t1 - casal\n\t2 - solteiro\n\t3 - suite.\n");
-    setbuf(stdin, NULL);
-    scanf("%d", &stts);
-    printf("Informe o mes: \n");
-    setbuf(stdin, NULL);
-    scanf("%d", &mes);
-
-    for (i = 0; i < contq; i++)
-    {
-        for (j = 0; j < 31; j++)
-        {
-            if (quarto[i].status[mes - 1][j] == stts)
-            {
-                imprimir_quarto(quarto[i]);
-            }
-        }
-    }
-}
-
-void buscar_por_preco(Quartos *quarto, int contq)
-{
-    int i = 0;
-    float preco;
-
-    printf("Informe o tipo de quarto que deseja consultar: \n");
-    printf("\n\t1 - casal\n\t2 - solteiro\n\t3 - suite.\n");
-    setbuf(stdin, NULL);
-    scanf("%f", &preco);
-
-    for (i = 0; i < contq; i++)
-    {
-        if (quarto[i].valor == preco)
-        {
-            imprimir_quarto(quarto[i]);
+            imprimir_quartos(quarto[i]);
         }
     }
 }
@@ -234,48 +173,133 @@ void menu_busca_quartos(Quartos *quarto, int contq)
     case 1:
         buscar_por_numero(quarto, contq);
         break;
-    case 2:
-        buscar_por_preco(quarto, contq);
-        break;
-    case 3:
-        buscar_por_status(quarto, contq);
-        break;
     }
 }
 
-// edita apenas preço
-void editar_quarto(Quartos *quarto, int contq)
+void excluirInformacaoArquivo(const char *nomeArquivo, const char *informacaoParaExcluir) {
+    // Abre o arquivo para leitura
+    FILE *arquivoEntrada = fopen(nomeArquivo, "r");
+    
+    if (arquivoEntrada == NULL) {
+        perror("Erro ao abrir o arquivo para leitura");
+        exit(EXIT_FAILURE);
+    }
+
+    // Cria um arquivo temporário para escrita
+    FILE *arquivoTemp = fopen("temp.txt", "w");
+    
+    if (arquivoTemp == NULL) {
+        perror("Erro ao criar o arquivo temporário");
+        fclose(arquivoEntrada);
+        exit(EXIT_FAILURE);
+    }
+
+    char linha[1000]; // Tamanho arbitrário, ajuste conforme necessário
+
+    // Lê linha por linha do arquivo original
+    while (fgets(linha, sizeof(linha), arquivoEntrada) != NULL) {
+        // Verifica se a linha contém a informação a ser excluída
+        if (strstr(linha, informacaoParaExcluir) == NULL) {
+            // Se não contiver, escreve no arquivo temporário
+            fputs(linha, arquivoTemp);
+        }
+    }
+
+    // Fecha os arquivos
+    fclose(arquivoEntrada);
+    fclose(arquivoTemp);
+
+    // Remove o arquivo original
+    if (remove(nomeArquivo) != 0) {
+        perror("Erro ao remover o arquivo original");
+        exit(EXIT_FAILURE);
+    }
+
+    // Renomeia o arquivo temporário para o nome original
+    if (rename("temp.txt", nomeArquivo) != 0) {
+        perror("Erro ao renomear o arquivo temporário");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Informação excluída com sucesso!\n");
+}
+void excluir_quarto()
 {
     int i = 0;
     int id;
 
+    printf("Informe o numero do quarto que deseja excluir: \n");
+    scanf("%d", &id);
+
+    char informacaoParaExcluir[50];
+    sprintf(informacaoParaExcluir, "%d", id);
+
+    excluirInformacaoArquivo("Quartos.txt", informacaoParaExcluir);
+}
+
+void editar_quarto(Quartos *quarto, int *contq, int tam, FILE *arquivo_quartos, FILE *temp1)
+{
+    int i = 0;
+    int id, j = 0, k = 0;
+    int encontrou = 0;
+
     printf("Informe o numero do quarto que deseja realizar a alteracao do valor: \n");
     scanf("%d", &id);
 
-    for (i = 0; i < contq; i++)
+    for (i = 0; i < *contq; i++)
     {
         if (quarto[i].numero_quarto == id)
         {
             printf("Informe o novo valor do quarto: \n");
-            setbuf(stdin, NULL);
             scanf("%f", &(quarto[i].valor));
+            encontrou = 1;
         }
-    }
-    for (i = 0; i < contq; i++)
-    {
-        if (quarto[i].numero_quarto == id)
+
+        fprintf(temp1, "%d %d %.2f\n", quarto[i].numero_quarto, quarto[i].tipo, quarto[i].valor);
+
+        for (j = 0; j < 12; j++)
         {
-            printf("Informe o novo valor do quarto: \n");
-            setbuf(stdin, NULL);
-            scanf("%f", &(quarto[i].valor));
+            for (k = 0; k < 31; k++)
+            {
+                fprintf(temp1, "%d ", quarto[i].status[j][k]);
+            }
+            fprintf(temp1, "\n");
         }
     }
+
+    if (encontrou != 1)
+    {
+        if (*contq < tam)
+        {
+            quarto[*contq] = cadastrar_quartos(quarto[*contq]);
+            fprintf(temp1, "%d %d %.2f\n", quarto[i].numero_quarto, quarto[i].tipo, quarto[i].valor);
+            for (int j = 0; j < 12; j++)
+            {
+                for (int k = 0; k < 31; k++)
+                {
+                    fprintf(temp1, "%d ", quarto[i].status[j][k]);
+                }
+                fprintf(temp1, "\n");
+            }
+            *contq += 1;
+        }
+    }
+
+    // Fecha os arquivos
+    fclose(arquivo_quartos);
+    fclose(temp1);
+
+    // Remove o arquivo original
+    remove("quartos.txt");
+
+    // Renomeia o arquivo temporário para o nome original
+    rename("temp1.txt", "quartos.txt");
+
+    printf("Quarto editado com sucesso!\n");
 }
 
-Cliente cadastrar_informacoes_clientes()
+Cliente cadastrar_informacoes_clientes(Cliente cliente)
 {
-    Cliente cliente;
-
     printf("\nInforme as suas informacoes:");
     printf("\nNome: ");
     setbuf(stdin, NULL);
@@ -317,7 +341,6 @@ void mostrar_cliente(Cliente cliente)
     printf("\nNome: %s\n", cliente.nome);
     printf("Data de nascimento: %d/%d/%d\n", cliente.dia, cliente.mes, cliente.ano);
     printf("Telefone: %s\n", cliente.telefone);
-    printf("Email: %s\n", cliente.email);
     printf("CPF: %s\n", cliente.cpf);
     printf("RG: %s\n", cliente.rg);
     printf("Rua: %s\n", cliente.rua);
@@ -328,7 +351,6 @@ void buscar_por_cpf(Cliente *cliente, int *contc, int tam)
 {
 
     int i = 0;
-    int cadastrado = 0;
     char cpf[12];
 
     printf("Informe o numero de cpf que deseja consultar: \n");
@@ -340,22 +362,16 @@ void buscar_por_cpf(Cliente *cliente, int *contc, int tam)
         if (strcmp(cliente[i].cpf, cpf) == 0)
         {
             mostrar_cliente(cliente[i]);
-            cadastrado = 1;
         }
-    }
-
-    if (cadastrado == 0 && *contc < tam)
-    {
-
-        printf("\nCliente nao encontrado, entao vamos cadastralo!");
-        (*contc)++;
-        cliente[*contc] = cadastrar_informacoes_clientes();
+        else if (*contc < tam)
+        {
+            cliente[*contc] = cadastrar_informacoes_clientes(cliente[*contc]);
+        }
     }
 }
 
 void buscar_por_rg(Cliente *cliente, int *contc, int tam)
 {
-    int cadastrado = 0;
 
     int i = 0;
     char rg[7];
@@ -369,21 +385,15 @@ void buscar_por_rg(Cliente *cliente, int *contc, int tam)
         if (strcmp(cliente[i].rg, rg) == 0)
         {
             mostrar_cliente(cliente[i]);
-            cadastrado = 1;
         }
-    }
-
-    if (cadastrado == 0 && *contc < tam)
-    {
-        printf("\nCliente nao encontrado, entao vamos cadastralo!");
-        (*contc)++;
-        cliente[*contc] = cadastrar_informacoes_clientes();
+        else if (*contc < tam)
+        {
+            cliente[*contc] = cadastrar_informacoes_clientes(cliente[*contc]);
+        }
     }
 }
 
-void menu_editar_cliente(Cliente *cliente, int *contc, int tam)
-{
-
+void menu_editar_cliente(Cliente *cliente, int *contc, int tam, FILE *arquivo, FILE *temp) {
     int op;
     int i = 0;
     char cpf[12];
@@ -393,68 +403,86 @@ void menu_editar_cliente(Cliente *cliente, int *contc, int tam)
     setbuf(stdin, NULL);
     scanf("%[^\n]", cpf);
 
-    for (i = 0; i < *contc; i++)
-    {
-        if (strcmp(cliente[i].cpf, cpf) == 0)
-        {
+    for (i = 0; i < *contc; i++) {
+        if (strcmp(cliente[i].cpf, cpf) == 0) {
             printf("\n\t=====================\n");
             printf("\n\tQual informacao deseja editar:\n");
             printf("\n\t1 - Nome\n\t2- Data de aniversario\n\t 3- Telefone\n\t4 - CPF\n\t5 - RG\n\t6 - Endereco\n\t7 - email\n\n");
             printf("\n\t=====================\n");
             scanf("%d", &op);
-            switch (op)
-            {
-            case 1:
-                printf("Informe o novo nome do cliente: \n");
-                setbuf(stdin, NULL);
-                scanf("%[^\n]", cliente[i].nome);
-                break;
-            case 2:
-                printf("Informe a nova data de aniversario: \n");
-                setbuf(stdin, NULL);
-                scanf("%d%d%d", &(cliente[i].dia), &(cliente[i].mes), &(cliente[i].ano));
-                break;
-            case 3:
-                printf("Informe o numero de telefone: \n");
-                setbuf(stdin, NULL);
-                scanf("%[^\n]", cliente[i].telefone);
-                break;
-            case 4:
-                printf("Informe o novo cpf: \n");
-                setbuf(stdin, NULL);
-                scanf("%[^\n]", cliente[i].cpf);
-                break;
-            case 5:
-                printf("Informe o novo rg: \n");
-                setbuf(stdin, NULL);
-                scanf("%[^\n]", cliente[i].rg);
-                break;
-            case 6:
-                printf("Informe o novo endereco (Rua e Cidade): \n");
-                setbuf(stdin, NULL);
-                scanf("%[^\n]%[^\n]", cliente[i].rua, cliente[i].cidade);
-                break;
-            case 7:
-                printf("Informe o novo email: \n");
-                setbuf(stdin, NULL);
-                scanf("%[^\n]", cliente[i].email);
-                break;
-            default:
-                printf("Opcao invalida!");
-                break;
+
+            switch (op) {
+                case 1:
+                    printf("Informe o novo nome do cliente: \n");
+                    setbuf(stdin, NULL);
+                    scanf("%[^\n]", cliente[i].nome);
+                    break;
+                case 2:
+                    printf("Informe a nova data de aniversario: \n");
+                    setbuf(stdin, NULL);
+                    scanf("%d%d%d", &(cliente[i].dia), &(cliente[i].mes), &(cliente[i].ano));
+                    break;
+                case 3:
+                    printf("Informe o numero de telefone: \n");
+                    setbuf(stdin, NULL);
+                    scanf("%[^\n]", cliente[i].telefone);
+                    break;
+                case 4:
+                    printf("Informe o novo cpf: \n");
+                    setbuf(stdin, NULL);
+                    scanf("%[^\n]", cliente[i].cpf);
+                    break;
+                case 5:
+                    printf("Informe o novo rg: \n");
+                    setbuf(stdin, NULL);
+                    scanf("%[^\n]", cliente[i].rg);
+                    break;
+                case 6:
+                    printf("Informe o novo endereco (Rua e Cidade): \n");
+                    setbuf(stdin, NULL);
+                    scanf("%[^\n]%[^\n]", cliente[i].rua, cliente[i].cidade);
+                    break;
+                case 7:
+                    printf("Informe o novo email: \n");
+                    setbuf(stdin, NULL);
+                    scanf("%[^\n]", cliente[i].email);
+                    break;
+                default:
+                    printf("Opcao invalida!\n");
+                    break;
             }
-            encontrou = 1;
+            encontrou = 1;  // Indica que o cliente foi encontrado
+        }
+
+        // Escreve a linha no arquivo temporário apenas se o cliente foi encontrado
+        fprintf(temp, "%s %d %d %d %s %s %s %s %s\n", cliente[i].nome, cliente[i].dia, cliente[i].mes, cliente[i].ano,
+                cliente[i].telefone, cliente[i].cpf, cliente[i].rg, cliente[i].rua, cliente[i].cidade, cliente[i].email);
+    }
+
+    // Adiciona novo cliente caso não tenha encontrado pelo CPF
+    if (encontrou != 1) {
+        if (*contc < tam) {
+            cliente[*contc] = cadastrar_informacoes_clientes(cliente[*contc]);
+            fprintf(temp, "%s %d %d %d %s %s %s %s %s\n", cliente[*contc].nome, cliente[*contc].dia, cliente[*contc].mes,
+                    cliente[*contc].ano, cliente[*contc].telefone, cliente[*contc].cpf, cliente[*contc].rg, cliente[*contc].rua,
+                    cliente[*contc].cidade, cliente[*contc].email);
+            *contc += 1;
         }
     }
 
-    if (encontrou != 1)
-    {
-        if (*contc < tam)
-        {
-            cliente[*contc] = cadastrar_informacoes_clientes(cliente[*contc]);
-        }
-    }
+    // Fecha os arquivos
+    fclose(arquivo);
+    fclose(temp);
+
+    // Remove o arquivo original
+    remove("cliente.txt");
+
+    // Renomeia o arquivo temporário para o nome original
+    rename("temp2.txt", "cliente.txt");
+
+    printf("Cliente editado com sucesso!\n");
 }
+
 
 void menu_busca_clientes(Cliente *cliente, int *contc, int tam)
 {
@@ -478,8 +506,7 @@ void menu_busca_clientes(Cliente *cliente, int *contc, int tam)
     }
 }
 
-// mexe com arquivo
-void menu_cliente(Cliente *cliente, int *contc, int tam)
+void menu_cliente(Cliente *cliente, int *contc, FILE *arquivo_cliente, int tam, FILE *temp)
 {
     int op;
 
@@ -493,12 +520,13 @@ void menu_cliente(Cliente *cliente, int *contc, int tam)
     switch (op)
     {
     case 1:
-
+        
         if (*contc < tam)
         {
             cliente[*contc] = cadastrar_informacoes_clientes(cliente[*contc]);
-
-            *contc += 1;
+            fprintf(arquivo_cliente, "%s %d/%d/%d %s %s %s %s %s %s\n", cliente[*contc].nome, cliente[*contc].dia, cliente[*contc].mes, cliente[*contc].ano, cliente[*contc].telefone, cliente[*contc].cpf, cliente[*contc].rg, cliente[*contc].rua, cliente[*contc].cidade, cliente[*contc].email);
+            (*contc) += 1;
+            fclose(arquivo_cliente);
         }
         break;
 
@@ -506,10 +534,10 @@ void menu_cliente(Cliente *cliente, int *contc, int tam)
         menu_busca_clientes(cliente, contc, tam);
         break;
     case 3:
-        menu_editar_cliente(cliente, contc, tam);
+        menu_editar_cliente(cliente, contc, tam, arquivo_cliente, temp);
         break;
     default:
-        printf("\nOpcao invalida!");
+        printf("Opcao invalida!");
         break;
     }
 }
@@ -536,7 +564,7 @@ void reserva_quartos(Quartos *quarto, int contq, Cliente *cliente, Reserva *rese
 
         printf("informe o dia de inicio e o de saida: ");
         setbuf(stdin, NULL);
-        scanf("%d %d", &d_inicial, &d_final);
+        scanf("%d%d", &d_inicial, &d_final);
 
         printf("Informe se o mes que voce deseja realizar a reserva\n\n");
         setbuf(stdin, NULL);
@@ -568,7 +596,6 @@ void reserva_quartos(Quartos *quarto, int contq, Cliente *cliente, Reserva *rese
                 {
                     quarto[i].status[mes - 1][dia - 1] = 3; // 3 - reservado
                     valor += quarto[i].valor;
-                    quarto[i].arrecadacao[mes - 1][dia - 1] = quarto[i].valor;
                 }
                 else if (quarto[i].status[mes - 1][dia - 1] == 3)
                 {
@@ -587,8 +614,9 @@ void reserva_quartos(Quartos *quarto, int contq, Cliente *cliente, Reserva *rese
                     {
                         if (quarto[k].numero_quarto == num)
                         {
-
-                            reserva[j].cliente = *cliente;
+                            strcpy(reserva[j].nome, cliente[i].nome);
+                            strcpy(reserva[j].cpf, cliente[i].cpf);
+                            strcpy(reserva[j].telefone, cliente[i].telefone);
                             reserva[j].nmr_quarto = num;
                             reserva[j].d_inicial = d_inicial;
                             reserva[j].d_final = d_final;
@@ -651,7 +679,9 @@ void reserva_quartos(Quartos *quarto, int contq, Cliente *cliente, Reserva *rese
         {
             if (cliente[i].cpf == cpf)
             {
-                reserva[i].cliente = *cliente;
+                strcpy(reserva[i].nome, cliente[i].nome);
+                strcpy(reserva[i].cpf, cliente[i].cpf);
+                strcpy(reserva[i].telefone, cliente[i].telefone);
                 reserva[i].nmr_quarto = quarto[i].numero_quarto;
                 reserva[i].d_inicial = d_inicial;
                 reserva[i].d_final = d_final;
@@ -710,7 +740,9 @@ void reserva_quartos(Quartos *quarto, int contq, Cliente *cliente, Reserva *rese
         {
             if (cliente[i].cpf == cpf)
             {
-                reserva[i].cliente = *cliente;
+                strcpy(reserva[i].nome, cliente[i].nome);
+                strcpy(reserva[i].cpf, cliente[i].cpf);
+                strcpy(reserva[i].telefone, cliente[i].telefone);
                 reserva[i].nmr_quarto = quarto[i].numero_quarto;
                 reserva[i].d_inicial = d_inicial;
                 reserva[i].d_final = d_final;
@@ -721,14 +753,16 @@ void reserva_quartos(Quartos *quarto, int contq, Cliente *cliente, Reserva *rese
         }
         break;
     }
+
+    
 }
 
 void listar_reservas(Reserva reserva)
 {
 
-    printf("\nNome do cliente : %s", reserva.cliente.nome);
-    printf("\nCPF: %s", reserva.cliente.cpf);
-    printf("\nTelefone: %s", reserva.cliente.telefone);
+    printf("\nNome: %s", reserva.nome);
+    printf("\nCPF: %s", reserva.cpf);
+    printf("\nTelefone: %s", reserva.telefone);
     printf("\nNumero do quarto: %d", reserva.nmr_quarto);
     printf("\nDia de inicio: %d", reserva.d_inicial);
     printf("\nDia final: %d", reserva.d_final);
@@ -755,7 +789,7 @@ void menu_listar_reservas(Reserva *reserva, int qreserva)
         scanf("%[^\n]", cpf);
         for (j = 0; j < qreserva; j++)
         {
-            if (strcmp(reserva[j].cliente.cpf, cpf) == 0)
+            if (strcmp(reserva[j].cpf, cpf) == 0)
             {
                 listar_reservas(reserva[j]);
             }
@@ -794,9 +828,10 @@ void menu_reserva(Quartos *quarto, int contq, Cliente *cliente, Reserva *reserva
     }
 }
 
-void menu_quarto(Quartos *quarto, int *contq, FILE *arquivo_quarto, int tam)
+void menu_quarto(Quartos *quarto, int *contq, FILE *arquivo_quarto, int tam, FILE *temp1)
 {
     int op;
+
     int i = 0, j = 0;
 
     printf("-----Menu Quarto-----:\n");
@@ -811,29 +846,27 @@ void menu_quarto(Quartos *quarto, int *contq, FILE *arquivo_quarto, int tam)
         if (*contq < tam)
         {
             quarto[*contq] = cadastrar_quartos(quarto[*contq]);
-
-            fprintf(arquivo_quarto, "Numero do quarto: %d Valor: %.2f Tipo: %d \n", quarto[*contq].numero_quarto, quarto[*contq].valor, quarto[*contq].tipo);
+            fprintf(arquivo_quarto, "%d %.2f %d \n", quarto[*contq].numero_quarto, quarto[*contq].valor, quarto[*contq].tipo);
             for (i = 0; i < 12; i++)
             {
                 for (j = 0; j < 31; j++)
                 {
-                    fprintf(arquivo_quarto, "Status do mes %d no dia %d = %d\n", i + 1, j + 1, quarto[*contq].status[i][j]);
+                    fprintf(arquivo_quarto, " %d \n", quarto[*contq].status[i][j]);
                 }
             }
-
-            *contq += 1;
-        }
-        else
-        {
-            printf("Limite de quartos atingido.\n");
+            fclose(arquivo_quarto);
+            (*contq) += 1;
         }
         break;
+
     case 2:
         menu_busca_quartos(quarto, *contq);
         break;
     case 3:
-        editar_quarto(quarto, *contq);
+        editar_quarto(quarto, contq, tam, arquivo_quarto, temp1);
         break;
+    case 4:
+        excluir_quarto();
     default:
         printf("Opcao invalida!");
         break;
@@ -851,7 +884,7 @@ void realizar_pagamento(Quartos *quarto, int contq, Reserva *reserva, int contc)
 
     for (i = 0; i < contc; i++)
     {
-        if (strcmp(reserva[i].cliente.cpf, cpf) == 0)
+        if (strcmp(reserva[i].cpf, cpf) == 0)
         {
             printf("valor do pagamento: %.2f \n", reserva[i].valor_reserva);
             printf("Pagamento concluído? \n");
@@ -892,10 +925,10 @@ void checking(Quartos *quarto, int contq, Reserva *reserva, int contc, int *qche
 
     for (i = 0; i < contc; i++)
     {
-        if (strcmp(reserva[i].cliente.cpf, cpf) == 0)
+        if (strcmp(reserva[i].cpf, cpf) == 0)
         {
-            printf("nome: %s\n", reserva[i].cliente.nome);
-            printf("CPF: %s\n", reserva[i].cliente.cpf);
+            printf("nome: %s\n", reserva[i].nome);
+            printf("CPF: %s\n", reserva[i].cpf);
             printf("Numero do quarto: %d\n", reserva[i].nmr_quarto);
             printf("Codigo de reserva: %d\n", reserva[i].cod_reserva);
             printf("Valor total: %.2f\n", reserva[i].valor_reserva);
@@ -934,8 +967,7 @@ void checking(Quartos *quarto, int contq, Reserva *reserva, int contc, int *qche
 void checkout(Quartos *quarto, int contq, Reserva *reserva, int contc)
 {
     int i = 0, j = 0, k = 0;
-    char cpf[12];
-    int op, r;
+    char cpf[12], r[5], op[5];
 
     int dia_f, dia_i, mes;
 
@@ -944,16 +976,16 @@ void checkout(Quartos *quarto, int contq, Reserva *reserva, int contc)
 
     for (i = 0; i < contc; i++)
     {
-        if (strcmp(reserva[i].cliente.cpf, cpf) == 0)
+        if (strcmp(reserva[i].cpf, cpf) == 0)
         {
-            printf("nome: %s ", reserva[i].cliente.nome);
-            printf("CPF: %s ", reserva[i].cliente.cpf);
+            printf("nome: %s ", reserva[i].nome);
+            printf("CPF: %s ", reserva[i].cpf);
             printf("Numero do quarto: %d ", reserva[i].nmr_quarto);
             printf("Codigo de reserva: %d ", reserva[i].cod_reserva);
 
-            printf("Deseja realizar check-out? [1 - SIM / 0 - Nao]");
-            scanf("%d", &op);
-            if (op == 1)
+            printf("Deseja realizar check-out? ");
+            scanf("%[^\n]", op);
+            if (strcmp(op, 'sim') == 0)
             {
                 mes = reserva[i].mes;
                 dia_i = reserva[i].d_inicial;
@@ -970,7 +1002,7 @@ void checkout(Quartos *quarto, int contq, Reserva *reserva, int contc)
         }
     }
     printf("Já realizou pagamento? \n");
-    scanf(" %d", &r);
+    scanf(" %[^\n]", r);
 
     for (i = 0; i < contc; i++)
     {
@@ -979,7 +1011,7 @@ void checkout(Quartos *quarto, int contq, Reserva *reserva, int contc)
         dia_f = reserva[i].d_final;
     }
 
-    if (r == 1)
+    if (strcmp(r, "nao") == 0)
     {
         realizar_pagamento(quarto, contq, reserva, contq);
     }
@@ -989,40 +1021,10 @@ void checkout(Quartos *quarto, int contq, Reserva *reserva, int contc)
     }
 }
 
-void consultar_valores(Quartos *quartos, int contq)
-{
-
-    int i = 0, k = 0, num;
-    int dia_inicial, dia_final, mes;
-    float soma = 0;
-
-    printf("Informe o numero do quarto que deseja consultar o valor: \n");
-    scanf("%d", &num);
-
-    printf("Informe o mes que deseja realizar a busca: \n");
-    scanf("%d", &mes);
-    printf("Informe o dia final e o dia inicial que deseja buscar: \n");
-    scanf("%d%d", &dia_inicial, &dia_final);
-    for (i = 0; i < contq; i++)
-    {
-        if (quartos[i].numero_quarto == num)
-        {
-            for (k = 0; k < 31; k++)
-            {
-                soma = quartos[i].arrecadacao[mes - 1][k - 1] + soma;
-            }
-        }
-    }
-
-    printf("%.2f \n", soma);
-}
-
-/*
 int main()
 {
     int op;
     int tam = 50;
-    int i;
 
     int qchecking = 0;
     int qreserva = 0;
@@ -1034,58 +1036,26 @@ int main()
     Checkin *checkin;
 
     FILE *arquivo_quartos = fopen("quartos.txt", "a+");
-    FILE *arq_q_temporario = fopen("tempQuarto.txt", "w");
+    FILE *temp1 = fopen("temp1.txt", "w");
 
-    FILE *arquivo_clientes = fopen("cliente.txt", "r");
-    if (arquivo_clientes == NULL)
-        printf("Falhei");
-    else
-        printf("\nAchei");
+    FILE *arquivo_clientes = fopen("cliente.txt", "a+");
+    FILE *temp = fopen("temp2.txt", "a");
 
-    // FILE *valores = fopen("valores_arrecadado", "a+");
     quartos = (Quartos *)calloc(tam, sizeof(Quartos));
     clientes = (Cliente *)calloc(tam, sizeof(Cliente));
+    // status = (Dia *)calloc(31, sizeof(Dia));
     reserva = (Reserva *)calloc(1000, sizeof(Reserva));
     checkin = (Checkin *)calloc(1000, sizeof(Checkin));
-
-    char linha[100];  // Ajuste o tamanho conforme necessário
-
-    // Lê uma linha por vez até o final do arquivo
-    while (fgets(linha, sizeof(linha), arquivo_clientes) != NULL) {
-        contc++;
-    }
-    printf("\nLinhas = %d", contc);
-
-    Cliente aux;
-
-    for (i = 0; i < contc; i++)
-    {
-        fscanf(arquivo_clientes, "%s %d %d %d %s %s %s %s %s %s",
-               aux.nome,
-               &aux.dia,
-               &aux.mes,
-               &aux.ano,
-               aux.telefone,
-               aux.cpf,
-               aux.rg,
-               aux.rua,
-               aux.cidade,
-               aux.email);
-
-        clientes[i] = aux;
-        mostrar_cliente(clientes[i]);
-    }
-
     do
     {
         op = menu_principal();
         switch (op)
         {
         case 1:
-            menu_quarto(quartos, &contq, arquivo_quartos, tam);
+            menu_quarto(quartos, &contq, arquivo_quartos, tam, temp1);
             break;
         case 2:
-            menu_cliente(clientes, &contc, tam);
+            menu_cliente(clientes, &contc, arquivo_clientes, tam, temp);
             break;
         case 3:
             menu_reserva(quartos, contq, clientes, reserva, contc, &qreserva);
@@ -1095,10 +1065,6 @@ int main()
             break;
         case 5:
             checkout(quartos, contq, reserva, contc);
-            break;
-        case 6:
-            consultar_valores(quartos, contq);
-            break;
         default:
             printf("Opcao invalida!");
             break;
@@ -1106,158 +1072,14 @@ int main()
     } while (op != 0);
 
     fclose(arquivo_quartos);
-    fclose(arq_q_temporario);
-
-    // passando os clientes da memória para o arquivo
+    fclose(temp1);
     fclose(arquivo_clientes);
-    arquivo_clientes = fopen("cliente.txt", "r");
-
-    for (i = 0; i < contc; i++)
-
-        fprintf(arquivo_clientes, "%s %d %d %d %s %s %s %s %s %s\n", clientes[i].nome, clientes[i].dia, clientes[i].mes, clientes[i].ano, clientes[i].telefone, clientes[i].cpf, clientes[i].rg, clientes[i].rua, clientes[i].cidade, clientes[i].email);
-
-    fclose(arquivo_clientes);
-
-    // fclose(valores);
+    fclose(temp);
 
     free(quartos);
     free(clientes);
     free(reserva);
     free(checkin);
-
-    return 0;
-}
-*/
-
-// Função para preencher um vetor de clientes a partir de um arquivo binário
-int lerClientesDoArquivo(Cliente vetor[], char nomeArquivo[])
-{
-    FILE *arquivo;
-    int numClientes = 0;
-    int resultado;
-    Cliente c;
-
-    arquivo = fopen(nomeArquivo, "a+b");
-
-    if (arquivo == NULL)
-        numClientes = -1;
-    else
-    {
-        // Lê as estruturas do arquivo e as coloca no veto
-        while (!feof(arquivo))
-        {
-            resultado = fread(&c, sizeof(Cliente), 1, arquivo);
-            if (resultado != 0)
-            {
-                vetor[numClientes] = c;
-        
-                numClientes++;
-            }
-        }
-
-        fclose(arquivo);
-    }
-
-    return numClientes; // Retorna o número de clientes lidos
-}
-/*
-int criar_arquivo(char nomeArquivo[])
-{
-    FILE *arquivo = fopen(nomeArquivo, "a+b");
-    int criei = 0;
-
-    if (arquivo != NULL)
-        criei = 1;
-
-    return criei;
-}
-*/
-// Função para salvar um vetor de clientes em um arquivo binário
-void salvarClientesNoArquivo(Cliente vetor[], int numClientes, const char *nomeArquivo)
-{
-    FILE *arquivo;
-    arquivo = fopen(nomeArquivo, "wb");
-
-
-    if (arquivo == NULL)
-    {
-        perror("Erro ao abrir o arquivo");
-    }
-    else
-    {
-        int i = 0;
-        while (i < numClientes)
-        {
-            fwrite(&vetor[i], sizeof(Cliente), 1, arquivo);
-            if (ferror(arquivo))
-                printf("\nErro na gravacao");
-            else
-                printf("\nSalvo com Sucesso\n");
-            i++;
-        }
-
-        // Escreve as estruturas do vetor no arquivo
-
-        fclose(arquivo);
-    }
-
-}
-
-int main()
-{
-    Cliente vetor[MAX_CLIENTES];
-    int numClientes;
-    int i = 0, opc = 1;
-
-    // Preenche o vetor com base nos dados do arquivo binário
-    numClientes = lerClientesDoArquivo(vetor, "clientes.bin");
-
-    if (numClientes == -1)
-    {
-        // Trate o caso de falha na leitura, se necessário
-        printf("\nNão foi possível ler clientes do arquivo.\n\nLogo um novo arquivo deve ser criado");
-    }
-    else
-    {
-        printf("\nTotal de Clientes = %d\n", numClientes);
-        while (opc != 0)
-        {
-            printf("\n1 - Cadastrar Cliente");
-            printf("\n2 - Mostrar Clientes");
-            printf("\n0 - Sair Cliente");
-            printf("\n\nSua resposta: ");
-            setbuf(stdin, NULL);
-            scanf("%d", &opc);
-
-            switch (opc)
-            {
-            case 1:
-                vetor[numClientes] = cadastrar_informacoes_clientes();
-
-                numClientes++;
-                break;
-
-            case 2:
-                for (i = 0; i < numClientes; i++)
-                    mostrar_cliente(vetor[i]);
-
-                break;
-
-            case 0:
-                break;
-            default:
-                break;
-            }
-        }
-
-        // Faça operações com o vetor, se necessário
-
-        // Salva o vetor em um novo arquivo binário
-        if (numClientes > 0)
-        {
-           salvarClientesNoArquivo(vetor, numClientes, "clientes.bin");
-        }
-    }
 
     return 0;
 }
